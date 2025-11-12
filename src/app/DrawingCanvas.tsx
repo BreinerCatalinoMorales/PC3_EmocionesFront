@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Download, Send, Trash2, Undo } from "lucide-react";
 import { downloadFile } from "@/lib/downloads";
+
+const BASE_URL = "https://web-production-a509a.up.railway.app"; // backend en Railway
 
 export default function DrawingCanvas({
   randomNumber,
@@ -26,7 +27,7 @@ export default function DrawingCanvas({
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   useEffect(() => {
-    fetch("https://web-production-d267c.up.railway.app/total-images")
+    fetch(`${BASE_URL}/total-images`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Error al obtener el total de imágenes");
@@ -35,7 +36,8 @@ export default function DrawingCanvas({
       })
       .then((data) => {
         console.log("Total de imágenes:", data);
-      });
+      })
+      .catch((e) => console.error(e));
   }, []);
 
   useEffect(() => {
@@ -45,24 +47,18 @@ export default function DrawingCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size
     const resizeCanvas = () => {
       const container = canvas.parentElement;
       if (container) {
         canvas.width = container.clientWidth;
         canvas.height = Math.min(500, window.innerHeight - 200);
-
-        // Save initial state
         saveState();
       }
     };
 
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
-
-    return () => {
-      window.removeEventListener("resize", resizeCanvas);
-    };
+    return () => window.removeEventListener("resize", resizeCanvas);
   }, []);
 
   const saveState = () => {
@@ -71,12 +67,9 @@ export default function DrawingCanvas({
     if (!canvas || !ctx) return;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // If we're not at the end of the history, remove everything after current index
     if (historyIndex < history.length - 1) {
       setHistory(history.slice(0, historyIndex + 1));
     }
-
     setHistory((prev) => [...prev, imageData]);
     setHistoryIndex((prev) => prev + 1);
   };
@@ -111,14 +104,13 @@ export default function DrawingCanvas({
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
   ) => {
     if (!isDrawing) return;
-
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
     let x, y;
     if ("touches" in e) {
-      e.preventDefault(); // Prevent scrolling on touch devices
+      e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       x = e.touches[0].clientX - rect.left;
       y = e.touches[0].clientY - rect.top;
@@ -142,38 +134,26 @@ export default function DrawingCanvas({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     saveState();
   };
 
   const undoLastAction = () => {
-    if (historyIndex <= 0) {
-      return;
-    }
-
+    if (historyIndex <= 0) return;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-
     setHistoryIndex((prev) => prev - 1);
     ctx.putImageData(history[historyIndex - 1], 0, 0);
   };
 
   const prepareData = async () => {
     try {
-      const response = await fetch(
-        "https://web-production-d267c.up.railway.app/prepare",
-        {
-          method: "GET",
-        }
-      );
-
+      const response = await fetch(`${BASE_URL}/prepare`, { method: "GET" });
       if (response.ok) {
         const result = await response.json();
         alert("Datos preparados correctamente.");
-        console.log(result); // para ver los detalles si los devuelve
+        console.log(result);
       } else {
         alert("Hubo un problema al preparar los datos.");
       }
@@ -184,17 +164,11 @@ export default function DrawingCanvas({
   };
 
   const downloadX = async () => {
-    await downloadFile(
-      "https://web-production-d267c.up.railway.app/X.npy",
-      "X.npy"
-    );
+    await downloadFile(`${BASE_URL}/X.npy`, "X.npy");
   };
 
   const downloadY = async () => {
-    await downloadFile(
-      "https://web-production-d267c.up.railway.app/y.npy",
-      "y.npy"
-    );
+    await downloadFile(`${BASE_URL}/y.npy`, "y.npy");
   };
 
   const sendDrawing = async () => {
@@ -202,17 +176,11 @@ export default function DrawingCanvas({
     if (!canvas) return;
 
     const dataURL = canvas.toDataURL("image/png");
-    const response = await fetch(
-      "https://web-production-d267c.up.railway.app/save-drawing",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: dataURL,
-          category: randomNumber, // 0, 1, 2
-        }),
-      }
-    );
+    const response = await fetch(`${BASE_URL}/save-drawing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image: dataURL, category: randomNumber }),
+    });
 
     if (response.ok) {
       alert("Imagen enviada y guardada correctamente.");
@@ -222,6 +190,7 @@ export default function DrawingCanvas({
       alert("Error al guardar la imagen.");
     }
   };
+
 
   return (
     <div className="flex flex-col items-center space-y-4">
