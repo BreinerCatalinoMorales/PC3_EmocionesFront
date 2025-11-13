@@ -12,7 +12,14 @@ import {
 import { Download, Send, Trash2, Undo } from "lucide-react";
 import { downloadFile } from "@/lib/downloads";
 
-const BASE_URL = "https://web-production-a509a.up.railway.app"; // backend en Railway
+const BASE_URL = "https://web-production-a509a.up.railway.app";
+
+// Colores predefinidos
+const COLORS = [
+  { name: "rojo", hex: "#FF0000" },
+  { name: "azul", hex: "#0000FF" },
+  { name: "verde", hex: "#00FF00" },
+];
 
 export default function DrawingCanvas({
   randomNumber,
@@ -25,6 +32,7 @@ export default function DrawingCanvas({
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [currentColor, setCurrentColor] = useState(COLORS[0]); // Color inicial: rojo
 
   useEffect(() => {
     fetch(`${BASE_URL}/total-images`)
@@ -97,7 +105,7 @@ export default function DrawingCanvas({
     ctx.moveTo(x, y);
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
-    ctx.strokeStyle = "#000";
+    ctx.strokeStyle = currentColor.hex;
   };
 
   const draw = (
@@ -179,7 +187,11 @@ export default function DrawingCanvas({
     const response = await fetch(`${BASE_URL}/save-drawing`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: dataURL, category: randomNumber }),
+      body: JSON.stringify({ 
+        image: dataURL, 
+        category: randomNumber,
+        color: currentColor.name 
+      }),
     });
 
     if (response.ok) {
@@ -189,8 +201,7 @@ export default function DrawingCanvas({
     } else {
       alert("Error al guardar la imagen.");
     }
-  };
-
+  };  
 
   return (
     <div className="flex flex-col items-center space-y-4">
@@ -214,6 +225,29 @@ export default function DrawingCanvas({
           onTouchMove={draw}
           onTouchEnd={stopDrawing}
         />
+      </div>
+      <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-lg shadow-md border-2 border-gray-200">
+        <p className="text-sm font-medium text-gray-700">
+          Selecciona un color:
+        </p>
+        <div className="flex gap-3">
+          {COLORS.map((color) => (
+            <button
+              key={color.name}
+              onClick={() => setCurrentColor(color)}
+              className={`w-16 h-16 rounded-lg border-4 transition-all hover:scale-110 ${
+                currentColor.name === color.name
+                  ? "border-gray-800 shadow-lg scale-110"
+                  : "border-gray-300"
+              }`}
+              style={{ backgroundColor: color.hex }}
+              title={color.name.charAt(0).toUpperCase() + color.name.slice(1)}
+            />
+          ))}
+        </div>
+        <p className="text-xs font-mono text-gray-600">
+          Color actual: <span className="font-bold">{currentColor.name}</span>
+        </p>
       </div>
 
       <TooltipProvider>
