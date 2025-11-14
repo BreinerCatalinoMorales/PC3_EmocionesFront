@@ -12,7 +12,7 @@ import {
 import { Download, Send, Trash2, Undo } from "lucide-react";
 import { downloadFile } from "@/lib/downloads";
 
-const BASE_URL = "web-production-a509a.up.railway.app";
+const BASE_URL = "https://web-production-a509a.up.railway.app/";
 
 const COLORS = [
   { name: "rojo", hex: "#FF0000" },
