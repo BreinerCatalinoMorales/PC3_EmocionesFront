@@ -12,9 +12,8 @@ import {
 import { Download, Send, Trash2, Undo } from "lucide-react";
 import { downloadFile } from "@/lib/downloads";
 
-const BASE_URL = "https://web-production-a509a.up.railway.app";
+const BASE_URL = "http://192.168.1.104:5000";
 
-// Colores predefinidos
 const COLORS = [
   { name: "rojo", hex: "#FF0000" },
   { name: "azul", hex: "#0000FF" },
@@ -32,7 +31,7 @@ export default function DrawingCanvas({
   const [isDrawing, setIsDrawing] = useState(false);
   const [history, setHistory] = useState<ImageData[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [currentColor, setCurrentColor] = useState(COLORS[0]); // Color inicial: rojo
+  const [currentColor, setCurrentColor] = useState(COLORS[0]);
 
   useEffect(() => {
     fetch(`${BASE_URL}/total-images`)
@@ -55,18 +54,15 @@ export default function DrawingCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const resizeCanvas = () => {
-      const container = canvas.parentElement;
-      if (container) {
-        canvas.width = container.clientWidth;
-        canvas.height = Math.min(500, window.innerHeight - 200);
-        saveState();
-      }
-    };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    return () => window.removeEventListener("resize", resizeCanvas);
+    // ✅ Canvas interno de 32x32 píxeles
+    canvas.width = 32;
+    canvas.height = 32;
+    
+    // Fondo blanco
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 32, 32);
+    
+    saveState();
   }, []);
 
   const saveState = () => {
@@ -82,6 +78,35 @@ export default function DrawingCanvas({
     setHistoryIndex((prev) => prev + 1);
   };
 
+  const getCanvasCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
+  ) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+
+    if ("touches" in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: x * scaleX,
+      y: y * scaleY
+    };
+  };
+
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
   ) => {
@@ -91,19 +116,11 @@ export default function DrawingCanvas({
 
     setIsDrawing(true);
 
-    let x, y;
-    if ("touches" in e) {
-      const rect = canvas.getBoundingClientRect();
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = e.nativeEvent.offsetX;
-      y = e.nativeEvent.offsetY;
-    }
+    const { x, y } = getCanvasCoordinates(e);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 1; 
     ctx.lineCap = "round";
     ctx.strokeStyle = currentColor.hex;
   };
@@ -116,16 +133,11 @@ export default function DrawingCanvas({
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    let x, y;
     if ("touches" in e) {
       e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = e.nativeEvent.offsetX;
-      y = e.nativeEvent.offsetY;
     }
+
+    const { x, y } = getCanvasCoordinates(e);
 
     ctx.lineTo(x, y);
     ctx.stroke();
@@ -142,7 +154,9 @@ export default function DrawingCanvas({
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     saveState();
   };
 
@@ -201,12 +215,12 @@ export default function DrawingCanvas({
     } else {
       alert("Error al guardar la imagen.");
     }
-  };  
+  };
 
   return (
     <div className="flex flex-col items-center space-y-4">
       <div
-        className={`w-full bg-white rounded-lg shadow-lg overflow-hidden border-4 ${
+        className={`max-w-fit bg-white rounded-lg shadow-lg overflow-hidden border-4 ${
           randomNumber === 0
             ? "border-amber-400"
             : randomNumber === 1
@@ -217,6 +231,12 @@ export default function DrawingCanvas({
         <canvas
           ref={canvasRef}
           className="touch-none cursor-crosshair"
+          style={{ 
+            width: '320px',
+            height: '320px',
+            imageRendering: 'pixelated',
+            display: 'block'
+          }}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}
@@ -226,6 +246,8 @@ export default function DrawingCanvas({
           onTouchEnd={stopDrawing}
         />
       </div>
+
+
       <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-lg shadow-md border-2 border-gray-200">
         <p className="text-sm font-medium text-gray-700">
           Selecciona un color:
@@ -311,7 +333,7 @@ export default function DrawingCanvas({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Descarga el dataset X</p>
+                <p>Prepara el dataset</p>
               </TooltipContent>
             </Tooltip>
 
