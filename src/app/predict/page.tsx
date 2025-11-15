@@ -174,7 +174,7 @@ export default function PredictPage() {
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-gray-800">
-            🎨 Predictor de Emociones
+            Predictor de Emociones
           </h1>
           <div className="w-24"></div> {/* Spacer para centrar */}
         </div>
@@ -182,7 +182,7 @@ export default function PredictPage() {
         {/* Instrucciones */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-3 text-gray-800">
-            📝 Instrucciones
+            Instrucciones
           </h2>
           <p className="text-gray-600">
             Dibuja una de las siguientes emociones en el canvas:

@@ -9,8 +9,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Download, Send, Trash2, Undo } from "lucide-react";
+import { Download, Send, Trash2, Undo, Brain } from "lucide-react"; // ← Agregar Brain
 import { downloadFile } from "@/lib/downloads";
+import Link from "next/link";
 
 const BASE_URL = "https://web-production-a509a.up.railway.app";
 
@@ -54,11 +55,9 @@ export default function DrawingCanvas({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // ✅ Canvas interno de 32x32 píxeles
     canvas.width = 32;
     canvas.height = 32;
     
-    // Fondo blanco
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, 32, 32);
     
@@ -120,7 +119,7 @@ export default function DrawingCanvas({
 
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineWidth = 1; 
+    ctx.lineWidth = 1;
     ctx.lineCap = "round";
     ctx.strokeStyle = currentColor.hex;
   };
@@ -247,7 +246,6 @@ export default function DrawingCanvas({
         />
       </div>
 
-
       <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-lg shadow-md border-2 border-gray-200">
         <p className="text-sm font-medium text-gray-700">
           Selecciona un color:
@@ -318,6 +316,21 @@ export default function DrawingCanvas({
             </TooltipTrigger>
             <TooltipContent>
               <p>Manda tu chamba, causa</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* ✅ NUEVO BOTÓN PARA IR A PREDICCIÓN */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link href="/predict">
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Brain className="h-5 w-5 mr-2" />
+                  <span>Predecir</span>
+                </Button>
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Prueba el modelo de IA</p>
             </TooltipContent>
           </Tooltip>
 
