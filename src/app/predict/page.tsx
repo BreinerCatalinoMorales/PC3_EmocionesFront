@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Trash2, Send } from "lucide-react";
 import Link from "next/link";
 
-const BASE_URL = "http://192.168.1.104:5000"; // Tu backend
+const BASE_URL = "https://web-production-a509a.up.railway.app"; // Tu backend
 
 export default function PredictPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
